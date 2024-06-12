@@ -10,4 +10,11 @@ services:
     volumes:
       - ./src:/app/src
     environment:
-      - NODE_ENV=production
+      - REACT_APP_API_URL=http://backend:3001
+    networks:
+      - bitcoin-explorer-network
+
+networks:
+  bitcoin-explorer-network:
+    external: true
+

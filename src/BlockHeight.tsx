@@ -8,13 +8,14 @@ interface Metric {
   difficulty: number;
   connection_count: number;
 }
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function BlockchainMetricsChart() {
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(() => {
-    fetch('http://localhost:3001/blockchain_metrics')
+    fetch(`${API_URL}/blockchain_metrics`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
