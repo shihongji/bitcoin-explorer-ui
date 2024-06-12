@@ -12,6 +12,10 @@ RUN npm ci
 # Copy the rest of your app's source code
 COPY . .
 
+# Use ARG to accept the API_URL during build
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
 # Build your app
 RUN npm run build
 

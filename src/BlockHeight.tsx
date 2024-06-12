@@ -9,6 +9,7 @@ interface Metric {
   connection_count: number;
 }
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const TMP_URL = 'http://backend:3001';
 
 function BlockchainMetricsChart() {
   const [metrics, setMetrics] = useState<Metric[]>([]);
