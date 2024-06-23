@@ -1,40 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
-const BlockHeight: React.FC = () => {
-    const [blockHeight, setBlockHeight] = useState<number | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+function BlockchainMetricsChart() {
+  const [metrics, setMetrics] = useState([]);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchBlockHeight = async () => {
-            try {
-                const response = await axios.get<number>('http://localhost:3030/block_height');
-                setBlockHeight(response.data);
-            } catch (err) {
-                setError('Failed to fetch block height');
-            } finally {
-                setLoading(false);
-            }
-        };
+  useEffect(() => {
+    fetch('http://localhost:3001/blockchain_metrics')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Received data:", data);  // Log the received data
+        setMetrics(data);
+      })
+      .catch(e => {
+        console.error("Fetch error:", e);
+        setError(e.message);
+      });
+  }, []);
 
-        fetchBlockHeight();
-    }, []);
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
+  if (metrics.length === 0) {
+    return <div>Loading...</div>;
+  }
 
-    if (error) {
-        return <div>Error: {error}</div>;
-    }
+  return (
+    <LineChart width={600} height={300} data={metrics}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="timestamp" />
+      <YAxis yAxisId="left" />
+      <YAxis yAxisId="right" orientation="right" />
+      <Tooltip />
+      <Legend />
+      <Line yAxisId="left" type="monotone" dataKey="block_height" stroke="#8884d8" />
+      <Line yAxisId="right" type="monotone" dataKey="difficulty" stroke="#82ca9d" />
+      <Line yAxisId="left" type="monotone" dataKey="connection_count" stroke="#ffc658" />
+    </LineChart>
+  );
+}
 
-    return (
-        <div>
-            <h1>Current Block Height</h1>
-            {blockHeight !== null ? <p>{blockHeight}</p> : <p>No data</p>}
-        </div>
-    );
-};
-
-export default BlockHeight;
+export default BlockchainMetricsChart;
