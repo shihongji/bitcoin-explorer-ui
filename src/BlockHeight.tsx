@@ -1,11 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import RefreshButton from './components/RefreshButton';
+
+interface Metric {
+  timestamp: string;
+  block_height: number;
+  difficulty: number;
+  connection_count: number;
+}
 
 function BlockchainMetricsChart() {
-  const [metrics, setMetrics] = useState([]);
-  const [error, setError] = useState(null);
+  const [metrics, setMetrics] = useState<Metric[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     fetch('http://localhost:3001/blockchain_metrics')
       .then(response => {
         if (!response.ok) {
@@ -13,8 +21,8 @@ function BlockchainMetricsChart() {
         }
         return response.json();
       })
-      .then(data => {
-        console.log("Received data:", data);  // Log the received data
+      .then((data: Metric[]) => {
+        console.log("Received data:", data);
         setMetrics(data);
       })
       .catch(e => {
@@ -22,6 +30,13 @@ function BlockchainMetricsChart() {
         setError(e.message);
       });
   }, []);
+
+  useEffect(() => {
+    fetchData(); // Initial fetch
+    const intervalId = setInterval(fetchData, 60000); // Refresh every 60 seconds
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [fetchData]);
 
   if (error) {
     return <div>Error: {error}</div>;
@@ -32,18 +47,23 @@ function BlockchainMetricsChart() {
   }
 
   return (
-    <LineChart width={600} height={300} data={metrics}>
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="timestamp" />
-      <YAxis yAxisId="left" />
-      <YAxis yAxisId="right" orientation="right" />
-      <Tooltip />
-      <Legend />
-      <Line yAxisId="left" type="monotone" dataKey="block_height" stroke="#8884d8" />
-      <Line yAxisId="right" type="monotone" dataKey="difficulty" stroke="#82ca9d" />
-      <Line yAxisId="left" type="monotone" dataKey="connection_count" stroke="#ffc658" />
-    </LineChart>
+    <div>
+      <LineChart width={900} height={600} data={metrics}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="timestamp" />
+        <YAxis yAxisId="left" />
+        <YAxis yAxisId="right" orientation="right" />
+        <Tooltip />
+        <Legend />
+        <Line yAxisId="left" type="monotone" dataKey="block_height" stroke="#8884d8" />
+        <Line yAxisId="right" type="monotone" dataKey="difficulty" stroke="#82ca9d" />
+        <Line yAxisId="left" type="monotone" dataKey="connection_count" stroke="#ffc658" />
+      </LineChart>
+      <RefreshButton onRefresh={fetchData} />
+    </div>
   );
 }
+
+
 
 export default BlockchainMetricsChart;
